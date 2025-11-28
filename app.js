@@ -1,21 +1,10 @@
-// Firebase/Supabase Mock - Remplacez par votre configuration réelle
-const DB = {
-    users: [
-        { id: 1, program: 'P35', code: '0099', nom: 'Admin', prenom: 'Système', niveau: 'L1', email: 'admin@uni.com', createdAt: new Date() }
-    ],
-    reclamations: [
-        {
-            id: 1,
-            userId: 1,
-            matiere: 'Informatique',
-            semestre: 1,
-            note: 'NÉANT',
-            commentaire: 'Exemple de réclamation',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }
-    ]
-};
+// Supabase Configuration
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+const SUPABASE_URL = 'https://rijihuzzuxeeyqnnxore.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpamlodXp6dXhlZXlxbm54b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTkyMzcsImV4cCI6MjA3OTkzNTIzN30.mYz9pX5qZ8vW3kL2nM1oP4qR5sT6uV7wX8yZ9aB0cD1'
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 let currentUser = null;
 let currentPage = 1;
@@ -27,7 +16,7 @@ function initApp() {
 }
 
 // Login Check
-function checkLogin() {
+async function checkLogin() {
     const program = document.getElementById('programSelect').value;
     const code = document.getElementById('codeInput').value;
     const errorMsg = document.getElementById('errorMsg');
@@ -46,24 +35,37 @@ function checkLogin() {
         return;
     }
 
-    // Check Admin
-    if (program === 'P35' && code === '0099') {
-        currentUser = DB.users[0];
-        showAdminDashboard();
-        return;
-    }
+    try {
+        // Requête Supabase
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('program', program)
+            .eq('code', code)
+            .single();
 
-    // Check Regular User
-    const user = DB.users.find(u => u.program === program && u.code === code);
-    if (user) {
-        currentUser = user;
-        showUserHome();
-    } else {
-        // Show Info Popup
-        document.getElementById('programSelect').value = program;
-        document.getElementById('codeInput').value = code;
-        closeLoginPopup();
-        openInfoPopup(program, code);
+        if (error || !data) {
+            // Utilisateur non trouvé → Créer un compte
+            document.getElementById('programSelect').value = program;
+            document.getElementById('codeInput').value = code;
+            closeLoginPopup();
+            openInfoPopup(program, code);
+            return;
+        }
+
+        // Utilisateur trouvé
+        currentUser = data;
+
+        // Vérifier si Admin (P35 / 0099)
+        if (program === 'P35' && code === '0099') {
+            showAdminDashboard();
+        } else {
+            showUserHome();
+        }
+    } catch (error) {
+        console.error('Erreur login:', error);
+        errorMsg.textContent = 'Erreur de connexion. Réessayez.';
+        errorMsg.classList.add('show');
     }
 }
 
@@ -96,24 +98,36 @@ function createUser() {
         return;
     }
 
-    // Create User
-    const newUser = {
-        id: DB.users.length + 1,
-        program,
-        code,
-        nom,
-        prenom,
-        niveau,
-        email,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    };
+    createUserAsync(nom, prenom, niveau, email, program, code, errorMsg);
+}
 
-    DB.users.push(newUser);
-    currentUser = newUser;
+async function createUserAsync(nom, prenom, niveau, email, program, code, errorMsg) {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .insert([
+                {
+                    program,
+                    code,
+                    nom,
+                    prenom,
+                    niveau,
+                    email
+                }
+            ])
+            .select()
+            .single();
 
-    closeInfoPopup();
-    showUserHome();
+        if (error) throw error;
+
+        currentUser = data;
+        closeInfoPopup();
+        showUserHome();
+    } catch (error) {
+        console.error('Erreur création utilisateur:', error);
+        errorMsg.textContent = 'Email ou code déjà utilisé';
+        errorMsg.classList.add('show');
+    }
 }
 
 function backToLogin() {
@@ -136,68 +150,77 @@ function closeInfoPopup() {
 }
 
 // User Home Page
-function showUserHome() {
+async function showUserHome() {
     const app = document.getElementById('app');
     
-    const userReclamations = DB.reclamations.filter(r => r.userId === currentUser.id);
+    try {
+        const { data: userReclamations, error } = await supabase
+            .from('reclamations')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
 
-    app.innerHTML = `
-        <div class="header">
-            <h1>Accueil</h1>
-            <div class="header-actions">
-                <button class="btn btn-secondary" onclick="editUserInfo()">Modifier mes infos</button>
-                <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
-            </div>
-        </div>
+        if (error) throw error;
 
-        <div class="welcome-message">
-            <h2>Bienvenue à la page de réclamation pour les P35 et P34 de la Communication</h2>
-            <p>Vous pouvez consulter vos réclamations ci-dessous ou en ajouter de nouvelles.</p>
-        </div>
-
-        <div class="user-info">
-            <h2>Vos Informations Personnelles</h2>
-            <div class="user-info-grid">
-                <div class="info-item">
-                    <label>Nom</label>
-                    <value>${currentUser.nom}</value>
-                </div>
-                <div class="info-item">
-                    <label>Prénom</label>
-                    <value>${currentUser.prenom}</value>
-                </div>
-                <div class="info-item">
-                    <label>Niveau</label>
-                    <value>${currentUser.niveau}</value>
-                </div>
-                <div class="info-item">
-                    <label>Email</label>
-                    <value>${currentUser.email}</value>
-                </div>
-                <div class="info-item">
-                    <label>Programme</label>
-                    <value>${currentUser.program}</value>
+        app.innerHTML = `
+            <div class="header">
+                <h1>Accueil</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="editUserInfo()">Modifier mes infos</button>
+                    <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="openReclamationPopup()">Ajouter une Réclamation</button>
-        </div>
 
-        <h2 style="margin-bottom: 20px;">Mes Réclamations</h2>
-        ${userReclamations.length > 0 ? `
-            <div class="reclamation-list">
-                ${userReclamations.map(rec => renderReclamationItem(rec, true)).join('')}
+            <div class="welcome-message">
+                <h2>Bienvenue à la page de réclamation pour les P35 et P34 de la Communication</h2>
+                <p>Vous pouvez consulter vos réclamations ci-dessous ou en ajouter de nouvelles.</p>
             </div>
-        ` : `
-            <div class="empty-state">
-                <h3>Aucune réclamation</h3>
-                <p>Vous n'avez pas encore ajouté de réclamation.</p>
+
+            <div class="user-info">
+                <h2>Vos Informations Personnelles</h2>
+                <div class="user-info-grid">
+                    <div class="info-item">
+                        <label>Nom</label>
+                        <value>${currentUser.nom}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Prénom</label>
+                        <value>${currentUser.prenom}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Niveau</label>
+                        <value>${currentUser.niveau}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Email</label>
+                        <value>${currentUser.email}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Programme</label>
+                        <value>${currentUser.program}</value>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="openReclamationPopup()">Ajouter une Réclamation</button>
             </div>
-        `}
-    `;
+
+            <h2 style="margin-bottom: 20px;">Mes Réclamations</h2>
+            ${userReclamations.length > 0 ? `
+                <div class="reclamation-list">
+                    ${userReclamations.map(rec => renderReclamationItem(rec, true)).join('')}
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <h3>Aucune réclamation</h3>
+                    <p>Vous n'avez pas encore ajouté de réclamation.</p>
+                </div>
+            `}
+        `;
+    } catch (error) {
+        console.error('Erreur chargement:', error);
+    }
 }
 
 function renderReclamationItem(rec, isUserPage = false) {
-    const user = DB.users.find(u => u.id === rec.userId);
     return `
         <div class="reclamation-item">
             <h3>${rec.matiere}</h3>
@@ -212,7 +235,7 @@ function renderReclamationItem(rec, isUserPage = false) {
                 </span>
                 <span>
                     <label>Date</label>
-                    ${new Date(rec.createdAt).toLocaleDateString('fr-FR')}
+                    ${new Date(rec.created_at).toLocaleDateString('fr-FR')}
                 </span>
             </div>
             <div class="reclamation-item-comment">
@@ -259,20 +282,32 @@ function addReclamation() {
         return;
     }
 
-    const newReclamation = {
-        id: DB.reclamations.length + 1,
-        userId: currentUser.id,
-        matiere,
-        semestre,
-        note,
-        commentaire,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    };
+    addReclamationAsync(matiere, semestre, note, commentaire, errorMsg);
+}
 
-    DB.reclamations.push(newReclamation);
-    closeReclamationPopup();
-    showUserHome();
+async function addReclamationAsync(matiere, semestre, note, commentaire, errorMsg) {
+    try {
+        const { error } = await supabase
+            .from('reclamations')
+            .insert([
+                {
+                    user_id: currentUser.id,
+                    matiere,
+                    semestre: parseInt(semestre),
+                    note,
+                    commentaire
+                }
+            ]);
+
+        if (error) throw error;
+
+        closeReclamationPopup();
+        showUserHome();
+    } catch (error) {
+        console.error('Erreur ajout réclamation:', error);
+        errorMsg.textContent = 'Erreur lors de l\'ajout';
+        errorMsg.classList.add('show');
+    }
 }
 
 function editReclamation(id) {
@@ -307,8 +342,21 @@ function editReclamation(id) {
 
 function deleteReclamation(id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette réclamation ?')) {
-        DB.reclamations = DB.reclamations.filter(r => r.id !== id);
+        deleteReclamationAsync(id);
+    }
+}
+
+async function deleteReclamationAsync(id) {
+    try {
+        const { error } = await supabase
+            .from('reclamations')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
         showUserHome();
+    } catch (error) {
+        console.error('Erreur suppression:', error);
     }
 }
 
@@ -342,60 +390,91 @@ function editUserInfo() {
             return;
         }
 
-        currentUser.nom = nom;
-        currentUser.prenom = prenom;
-        currentUser.niveau = niveau;
-        currentUser.email = email;
-        currentUser.updatedAt = new Date();
-
-        window.createUser = oldCreateUser;
-        closeInfoPopup();
-        showUserHome();
+        updateUserAsync(nom, prenom, niveau, email, errorMsg, oldCreateUser);
     };
 
     document.getElementById('infoPopup').classList.add('active');
 }
 
+async function updateUserAsync(nom, prenom, niveau, email, errorMsg, oldCreateUser) {
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({
+                nom,
+                prenom,
+                niveau,
+                email,
+                updated_at: new Date()
+            })
+            .eq('id', currentUser.id);
+
+        if (error) throw error;
+
+        currentUser.nom = nom;
+        currentUser.prenom = prenom;
+        currentUser.niveau = niveau;
+        currentUser.email = email;
+
+        window.createUser = oldCreateUser;
+        document.getElementById('infoPopup').classList.remove('active');
+        showUserHome();
+    } catch (error) {
+        console.error('Erreur mise à jour:', error);
+        errorMsg.textContent = 'Erreur lors de la mise à jour';
+        errorMsg.classList.add('show');
+    }
+}
+
 // Admin Dashboard
-function showAdminDashboard() {
+async function showAdminDashboard() {
     const app = document.getElementById('app');
     
-    const totalReclamations = DB.reclamations.length;
-    const totalPages = Math.ceil(DB.reclamations.length / itemsPerPage);
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    const paginatedReclamations = DB.reclamations.slice(startIdx, startIdx + itemsPerPage);
+    try {
+        const { data: reclamations, error } = await supabase
+            .from('reclamations')
+            .select(`
+                *,
+                users(*)
+            `)
+            .order('created_at', { ascending: false });
 
-    app.innerHTML = `
-        <div class="admin-header">
-            <div>
-                <h1>Dashboard Admin</h1>
-                <p style="color: #666; margin-top: 5px;">Total Réclamations: ${totalReclamations}</p>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-primary" onclick="openDownloadPopup()">Télécharger</button>
-                <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
-            </div>
-        </div>
+        if (error) throw error;
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Étudiant</th>
-                        <th>Programme</th>
-                        <th>Matière</th>
-                        <th>Semestre</th>
-                        <th>Note</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${paginatedReclamations.map(rec => {
-                        const user = DB.users.find(u => u.id === rec.userId);
-                        return `
+        const totalReclamations = reclamations.length;
+        const totalPages = Math.ceil(reclamations.length / itemsPerPage);
+        const startIdx = (currentPage - 1) * itemsPerPage;
+        const paginatedReclamations = reclamations.slice(startIdx, startIdx + itemsPerPage);
+
+        app.innerHTML = `
+            <div class="admin-header">
+                <div>
+                    <h1>Dashboard Admin</h1>
+                    <p style="color: #666; margin-top: 5px;">Total Réclamations: ${totalReclamations}</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openDownloadPopup()">Télécharger</button>
+                    <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étudiant</th>
+                            <th>Programme</th>
+                            <th>Matière</th>
+                            <th>Semestre</th>
+                            <th>Note</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginatedReclamations.map(rec => `
                             <tr>
-                                <td>${user.prenom} ${user.nom}</td>
-                                <td><span class="badge">${user.program}</span></td>
+                                <td>${rec.users.prenom} ${rec.users.nom}</td>
+                                <td><span class="badge">${rec.users.program}</span></td>
                                 <td>${rec.matiere}</td>
                                 <td>${rec.semestre}</td>
                                 <td>${rec.note === 'NÉANT' ? '<span class="badge neant">NÉANT</span>' : rec.note}/20</td>
@@ -403,20 +482,22 @@ function showAdminDashboard() {
                                     <button class="btn btn-primary btn-small" onclick="showReclamationDetail(${rec.id})">Voir</button>
                                 </td>
                             </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>
-
-        ${totalPages > 1 ? `
-            <div class="pagination">
-                ${Array.from({ length: totalPages }, (_, i) => i + 1).map(page => `
-                    <button ${page === currentPage ? 'class="active"' : ''} onclick="goToPage(${page})">${page}</button>
-                `).join('')}
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
-        ` : ''}
-    `;
+
+            ${totalPages > 1 ? `
+                <div class="pagination">
+                    ${Array.from({ length: totalPages }, (_, i) => i + 1).map(page => `
+                        <button ${page === currentPage ? 'class="active"' : ''} onclick="goToPage(${page})">${page}</button>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
+    } catch (error) {
+        console.error('Erreur admin dashboard:', error);
+    }
 }
 
 function goToPage(page) {
@@ -424,72 +505,79 @@ function goToPage(page) {
     showAdminDashboard();
 }
 
-function showReclamationDetail(id) {
-    const rec = DB.reclamations.find(r => r.id === id);
-    const user = DB.users.find(u => u.id === rec.userId);
+async function showReclamationDetail(id) {
+    try {
+        const { data: rec, error } = await supabase
+            .from('reclamations')
+            .select('*, users(*)')
+            .eq('id', id)
+            .single();
 
-    if (!rec || !user) return;
+        if (error || !rec) return;
 
-    const detailContent = document.getElementById('detailContent');
-    detailContent.innerHTML = `
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-bottom: 15px;">Informations de l'Étudiant</h3>
-            <div class="user-info-grid">
-                <div class="info-item">
-                    <label>Nom</label>
-                    <value>${user.nom}</value>
-                </div>
-                <div class="info-item">
-                    <label>Prénom</label>
-                    <value>${user.prenom}</value>
-                </div>
-                <div class="info-item">
-                    <label>Niveau</label>
-                    <value>${user.niveau}</value>
-                </div>
-                <div class="info-item">
-                    <label>Programme</label>
-                    <value>${user.program}</value>
-                </div>
-                <div class="info-item">
-                    <label>Email</label>
-                    <value>${user.email}</value>
-                </div>
-                <div class="info-item">
-                    <label>Date d'inscription</label>
-                    <value>${new Date(user.createdAt).toLocaleDateString('fr-FR')}</value>
+        const detailContent = document.getElementById('detailContent');
+        detailContent.innerHTML = `
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Informations de l'Étudiant</h3>
+                <div class="user-info-grid">
+                    <div class="info-item">
+                        <label>Nom</label>
+                        <value>${rec.users.nom}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Prénom</label>
+                        <value>${rec.users.prenom}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Niveau</label>
+                        <value>${rec.users.niveau}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Programme</label>
+                        <value>${rec.users.program}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Email</label>
+                        <value>${rec.users.email}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Date d'inscription</label>
+                        <value>${new Date(rec.users.created_at).toLocaleDateString('fr-FR')}</value>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
-            <h3 style="margin-bottom: 15px;">Détail de la Réclamation</h3>
-            <div class="user-info-grid">
-                <div class="info-item">
-                    <label>Matière</label>
-                    <value>${rec.matiere}</value>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                <h3 style="margin-bottom: 15px;">Détail de la Réclamation</h3>
+                <div class="user-info-grid">
+                    <div class="info-item">
+                        <label>Matière</label>
+                        <value>${rec.matiere}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Semestre</label>
+                        <value>${rec.semestre}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Note</label>
+                        <value>${rec.note === 'NÉANT' ? '<span class="badge neant">NÉANT</span>' : rec.note + '/20'}</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Date</label>
+                        <value>${new Date(rec.created_at).toLocaleDateString('fr-FR')}</value>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Semestre</label>
-                    <value>${rec.semestre}</value>
-                </div>
-                <div class="info-item">
-                    <label>Note</label>
-                    <value>${rec.note === 'NÉANT' ? '<span class="badge neant">NÉANT</span>' : rec.note + '/20'}</value>
-                </div>
-                <div class="info-item">
-                    <label>Date</label>
-                    <value>${new Date(rec.createdAt).toLocaleDateString('fr-FR')}</value>
+                <div style="margin-top: 15px;">
+                    <label style="font-weight: 500; color: #666; display: block; margin-bottom: 8px;">Commentaire</label>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">${rec.commentaire}</div>
                 </div>
             </div>
-            <div style="margin-top: 15px;">
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 8px;">Commentaire</label>
-                <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">${rec.commentaire}</div>
-            </div>
-        </div>
-    `;
+        `;
 
-    document.getElementById('detailPopup').classList.add('active');
+        document.getElementById('detailPopup').classList.add('active');
+    } catch (error) {
+        console.error('Erreur chargement détail:', error);
+    }
 }
 
 function closeDetailPopup() {
@@ -505,38 +593,48 @@ function closeDownloadPopup() {
     document.getElementById('downloadPopup').classList.remove('active');
 }
 
-function downloadReclamations() {
+async function downloadReclamations() {
     const matiere = document.getElementById('filterMatiere').value;
     const program = document.getElementById('filterProgram').value;
     const note = document.getElementById('filterNote').value;
     const format = document.getElementById('formatSelect').value;
 
-    let filtered = DB.reclamations;
+    try {
+        let query = supabase
+            .from('reclamations')
+            .select('*, users(*)');
 
-    if (matiere) {
-        filtered = filtered.filter(r => r.matiere === matiere);
+        if (matiere) {
+            query = query.eq('matiere', matiere);
+        }
+
+        if (note === 'NÉANT') {
+            query = query.eq('note', 'NÉANT');
+        } else if (note === 'NON_NEANT') {
+            query = query.neq('note', 'NÉANT');
+        }
+
+        const { data: filtered, error } = await query;
+
+        if (error) throw error;
+
+        let finalData = filtered;
+        if (program) {
+            finalData = filtered.filter(r => r.users.program === program);
+        }
+
+        if (format === 'pdf') {
+            downloadPDF(finalData);
+        } else if (format === 'csv') {
+            downloadCSV(finalData);
+        } else if (format === 'json') {
+            downloadJSON(finalData);
+        }
+
+        closeDownloadPopup();
+    } catch (error) {
+        console.error('Erreur téléchargement:', error);
     }
-
-    if (program) {
-        const user = DB.users.find(u => u.program === program);
-        filtered = filtered.filter(r => r.userId === user?.id);
-    }
-
-    if (note === 'NÉANT') {
-        filtered = filtered.filter(r => r.note === 'NÉANT');
-    } else if (note === 'NON_NEANT') {
-        filtered = filtered.filter(r => r.note !== 'NÉANT');
-    }
-
-    if (format === 'pdf') {
-        downloadPDF(filtered);
-    } else if (format === 'csv') {
-        downloadCSV(filtered);
-    } else if (format === 'json') {
-        downloadJSON(filtered);
-    }
-
-    closeDownloadPopup();
 }
 
 function downloadPDF(data) {
@@ -544,8 +642,7 @@ function downloadPDF(data) {
     content += `Date: ${new Date().toLocaleDateString('fr-FR')}\n\n`;
 
     data.forEach((rec, idx) => {
-        const user = DB.users.find(u => u.id === rec.userId);
-        content += `${idx + 1}. ${user.prenom} ${user.nom} (${user.program})\n`;
+        content += `${idx + 1}. ${rec.users.prenom} ${rec.users.nom} (${rec.users.program})\n`;
         content += `   Matière: ${rec.matiere}\n`;
         content += `   Semestre: ${rec.semestre}\n`;
         content += `   Note: ${rec.note}\n`;
@@ -566,8 +663,7 @@ function downloadCSV(data) {
     let csv = 'Étudiant,Programme,Matière,Semestre,Note,Commentaire,Date\n';
 
     data.forEach(rec => {
-        const user = DB.users.find(u => u.id === rec.userId);
-        csv += `"${user.prenom} ${user.nom}","${user.program}","${rec.matiere}",${rec.semestre},"${rec.note}","${rec.commentaire}","${new Date(rec.createdAt).toLocaleDateString('fr-FR')}"\n`;
+        csv += `"${rec.users.prenom} ${rec.users.nom}","${rec.users.program}","${rec.matiere}",${rec.semestre},"${rec.note}","${rec.commentaire}","${new Date(rec.created_at).toLocaleDateString('fr-FR')}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -582,15 +678,14 @@ function downloadCSV(data) {
 
 function downloadJSON(data) {
     const jsonData = data.map(rec => {
-        const user = DB.users.find(u => u.id === rec.userId);
         return {
-            etudiant: `${user.prenom} ${user.nom}`,
-            programme: user.program,
+            etudiant: `${rec.users.prenom} ${rec.users.nom}`,
+            programme: rec.users.program,
             matiere: rec.matiere,
             semestre: rec.semestre,
             note: rec.note,
             commentaire: rec.commentaire,
-            date: new Date(rec.createdAt).toLocaleDateString('fr-FR')
+            date: new Date(rec.created_at).toLocaleDateString('fr-FR')
         };
     });
 
