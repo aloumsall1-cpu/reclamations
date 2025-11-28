@@ -1,0 +1,8 @@
+{
+  "name": "reclamations-communication",
+  "version": "1.0.0",
+  "description": "Système de Gestion des Réclamations P35/P34",
+  "scripts": {
+    "start": "python -m http.server 8000"
+  }
+}

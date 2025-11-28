@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Système de Réclamations - Communication</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <!-- Login Popup -->
+    <div id="loginPopup" class="popup active">
+        <div class="popup-content">
+            <h2>Connexion</h2>
+            <p>Veuillez sélectionner votre programme d'études</p>
+            
+            <div class="form-group">
+                <label>Programme :</label>
+                <select id="programSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="P35">P35</option>
+                    <option value="P34">P34</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Code (4 chiffres) :</label>
+                <input type="text" id="codeInput" maxlength="4" placeholder="0000">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="checkLogin()">Vérifier</button>
+            </div>
+
+            <div id="errorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Info Personnel Popup -->
+    <div id="infoPopup" class="popup">
+        <div class="popup-content">
+            <h2>Vos Informations Personnelles</h2>
+            
+            <div class="form-group">
+                <label>Nom :</label>
+                <input type="text" id="nomInput" placeholder="Votre nom">
+            </div>
+
+            <div class="form-group">
+                <label>Prénom :</label>
+                <input type="text" id="prenomInput" placeholder="Votre prénom">
+            </div>
+
+            <div class="form-group">
+                <label>Niveau :</label>
+                <select id="niveauSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="L1">L1</option>
+                    <option value="L2">L2</option>
+                    <option value="L3">L3</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Email :</label>
+                <input type="email" id="emailInput" placeholder="votre.email@exemple.com">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="createUser()">Continuer</button>
+                <button class="btn btn-secondary" onclick="backToLogin()">Retour</button>
+            </div>
+
+            <div id="infoErrorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Add Reclamation Popup -->
+    <div id="reclamationPopup" class="popup">
+        <div class="popup-content large">
+            <h2>Ajouter une Réclamation</h2>
+            
+            <div class="form-group">
+                <label>Matière :</label>
+                <select id="matiereSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="Théories des sciences de l'information et de la communication">Théories des sciences de l'information et de la communication</option>
+                    <option value="Socio-histoire des médias">Socio-histoire des médias</option>
+                    <option value="Fondements de la communication des organisations">Fondements de la communication des organisations</option>
+                    <option value="Sociologie des entreprises">Sociologie des entreprises</option>
+                    <option value="Métiers de la communication">Métiers de la communication</option>
+                    <option value="Textes et auteurs de référence en sciences de l'information et de la communication">Textes et auteurs de référence en sciences de l'information et de la communication</option>
+                    <option value="Techniques de recherche documentaire">Techniques de recherche documentaire</option>
+                    <option value="Introduction aux innovations technologiques">Introduction aux innovations technologiques</option>
+                    <option value="Informatique">Informatique</option>
+                    <option value="Relations publiques/relations presse">Relations publiques/relations presse</option>
+                    <option value="Communiqué de presse et pressbook">Communiqué de presse et pressbook</option>
+                    <option value="Prise de parole en public">Prise de parole en public</option>
+                    <option value="Techniques d'argumentation">Techniques d'argumentation</option>
+                    <option value="Techniques de synthèse">Techniques de synthèse</option>
+                    <option value="Langues nationales (Wolof, Pulaar, Sérère)">Langues nationales (Wolof, Pulaar, Sérère)</option>
+                    <option value="Langues africaines et étrangères (Espagnol, arabe, Swahili)">Langues africaines et étrangères (Espagnol, arabe, Swahili)</option>
+                    <option value="Industries culturelles et créatives">Industries culturelles et créatives</option>
+                    <option value="Diversité culturelle">Diversité culturelle</option>
+                    <option value="Communication interne">Communication interne</option>
+                    <option value="Communication externe">Communication externe</option>
+                    <option value="Introduction à la publicité">Introduction à la publicité</option>
+                    <option value="Sémiologie de l'image">Sémiologie de l'image</option>
+                    <option value="Création graphique">Création graphique</option>
+                    <option value="Anglais">Anglais</option>
+                    <option value="Français">Français</option>
+                    <option value="Droit de l'information et de la communication">Droit de l'information et de la communication</option>
+                    <option value="Pratiques du sport">Pratiques du sport</option>
+                    <option value="Théâtre, Musique et Cinéma">Théâtre, Musique et Cinéma</option>
+                    <option value="Expressions artistiques">Expressions artistiques</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Semestre :</label>
+                <select id="semestreSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Note :</label>
+                <select id="noteSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="NÉANT">NÉANT</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Commentaire :</label>
+                <textarea id="commentaireInput" placeholder="Décrivez votre réclamation..." rows="4"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="addReclamation()">Ajouter Réclamation</button>
+                <button class="btn btn-secondary" onclick="closeReclamationPopup()">Annuler</button>
+            </div>
+
+            <div id="reclamationErrorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Download Popup (Admin) -->
+    <div id="downloadPopup" class="popup">
+        <div class="popup-content large">
+            <h2>Télécharger les Réclamations</h2>
+            
+            <div class="form-group">
+                <label>Matière :</label>
+                <select id="filterMatiere">
+                    <option value="">Toutes les matières</option>
+                    <option value="Théories des sciences de l'information et de la communication">Théories des sciences de l'information et de la communication</option>
+                    <option value="Socio-histoire des médias">Socio-histoire des médias</option>
+                    <option value="Fondements de la communication des organisations">Fondements de la communication des organisations</option>
+                    <option value="Sociologie des entreprises">Sociologie des entreprises</option>
+                    <option value="Métiers de la communication">Métiers de la communication</option>
+                    <option value="Textes et auteurs de référence en sciences de l'information et de la communication">Textes et auteurs de référence en sciences de l'information et de la communication</option>
+                    <option value="Techniques de recherche documentaire">Techniques de recherche documentaire</option>
+                    <option value="Introduction aux innovations technologiques">Introduction aux innovations technologiques</option>
+                    <option value="Informatique">Informatique</option>
+                    <option value="Relations publiques/relations presse">Relations publiques/relations presse</option>
+                    <option value="Communiqué de presse et pressbook">Communiqué de presse et pressbook</option>
+                    <option value="Prise de parole en public">Prise de parole en public</option>
+                    <option value="Techniques d'argumentation">Techniques d'argumentation</option>
+                    <option value="Techniques de synthèse">Techniques de synthèse</option>
+                    <option value="Langues nationales (Wolof, Pulaar, Sérère)">Langues nationales (Wolof, Pulaar, Sérère)</option>
+                    <option value="Langues africaines et étrangères (Espagnol, arabe, Swahili)">Langues africaines et étrangères (Espagnol, arabe, Swahili)</option>
+                    <option value="Industries culturelles et créatives">Industries culturelles et créatives</option>
+                    <option value="Diversité culturelle">Diversité culturelle</option>
+                    <option value="Communication interne">Communication interne</option>
+                    <option value="Communication externe">Communication externe</option>
+                    <option value="Introduction à la publicité">Introduction à la publicité</option>
+                    <option value="Sémiologie de l'image">Sémiologie de l'image</option>
+                    <option value="Création graphique">Création graphique</option>
+                    <option value="Anglais">Anglais</option>
+                    <option value="Français">Français</option>
+                    <option value="Droit de l'information et de la communication">Droit de l'information et de la communication</option>
+                    <option value="Pratiques du sport">Pratiques du sport</option>
+                    <option value="Théâtre, Musique et Cinéma">Théâtre, Musique et Cinéma</option>
+                    <option value="Expressions artistiques">Expressions artistiques</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Programme :</label>
+                <select id="filterProgram">
+                    <option value="">Tous les programmes</option>
+                    <option value="P35">P35</option>
+                    <option value="P34">P34</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Note :</label>
+                <select id="filterNote">
+                    <option value="">Toutes les notes</option>
+                    <option value="NÉANT">NÉANT seulement</option>
+                    <option value="NON_NEANT">Non NÉANT</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Format :</label>
+                <select id="formatSelect">
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="downloadReclamations()">Télécharger</button>
+                <button class="btn btn-secondary" onclick="closeDownloadPopup()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Popup (Admin) -->
+    <div id="detailPopup" class="popup">
+        <div class="popup-content large">
+            <h2>Détail de la Réclamation</h2>
+            <div id="detailContent"></div>
+            
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeDetailPopup()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
