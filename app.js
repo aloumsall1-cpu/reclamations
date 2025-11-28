@@ -1,18 +1,55 @@
 // Supabase Configuration
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+let supabase = null;
 
 const SUPABASE_URL = 'https://rijihuzzuxeeyqnnxore.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpamlodXp6dXhlZXlxbm54b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTkyMzcsImV4cCI6MjA3OTkzNTIzN30.mYz9pX5qZ8vW3kL2nM1oP4qR5sT6uV7wX8yZ9aB0cD1'
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 let currentUser = null;
 let currentPage = 1;
 const itemsPerPage = 10;
 
+// Initialiser Supabase
+async function initSupabase() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = () => {
+        const { createClient } = window.supabase;
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase connecté');
+    };
+    script.onerror = () => {
+        console.error('❌ Erreur chargement Supabase');
+        showError('Erreur de connexion à la base de données');
+    };
+    document.head.appendChild(script);
+}
+
 // Initialize App
-function initApp() {
+async function initApp() {
+    await new Promise(resolve => {
+        if (supabase) {
+            resolve();
+        } else {
+            // Attendre que Supabase soit chargé
+            const checkSupabase = setInterval(() => {
+                if (window.supabase && !supabase) {
+                    const { createClient } = window.supabase;
+                    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    clearInterval(checkSupabase);
+                    resolve();
+                }
+            }, 100);
+            setTimeout(() => {
+                clearInterval(checkSupabase);
+                resolve();
+            }, 5000);
+        }
+    });
     renderHomePage();
+}
+
+function showError(message) {
+    alert('⚠️ ' + message);
 }
 
 // Login Check
@@ -35,6 +72,12 @@ async function checkLogin() {
         return;
     }
 
+    if (!supabase) {
+        errorMsg.textContent = 'Erreur de connexion à la base de données';
+        errorMsg.classList.add('show');
+        return;
+    }
+
     try {
         // Requête Supabase
         const { data, error } = await supabase
@@ -44,13 +87,17 @@ async function checkLogin() {
             .eq('code', code)
             .single();
 
-        if (error || !data) {
+        if (error) {
             // Utilisateur non trouvé → Créer un compte
-            document.getElementById('programSelect').value = program;
-            document.getElementById('codeInput').value = code;
-            closeLoginPopup();
-            openInfoPopup(program, code);
-            return;
+            if (error.code === 'PGRST116') {
+                document.getElementById('programSelect').value = program;
+                document.getElementById('codeInput').value = code;
+                closeLoginPopup();
+                openInfoPopup(program, code);
+                return;
+            } else {
+                throw error;
+            }
         }
 
         // Utilisateur trouvé
@@ -102,6 +149,12 @@ function createUser() {
 }
 
 async function createUserAsync(nom, prenom, niveau, email, program, code, errorMsg) {
+    if (!supabase) {
+        errorMsg.textContent = 'Erreur de connexion à la base de données';
+        errorMsg.classList.add('show');
+        return;
+    }
+
     try {
         const { data, error } = await supabase
             .from('users')
@@ -118,14 +171,22 @@ async function createUserAsync(nom, prenom, niveau, email, program, code, errorM
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            if (error.message.includes('duplicate')) {
+                errorMsg.textContent = 'Email ou code déjà utilisé';
+            } else {
+                errorMsg.textContent = 'Erreur lors de la création du compte';
+            }
+            errorMsg.classList.add('show');
+            return;
+        }
 
         currentUser = data;
         closeInfoPopup();
         showUserHome();
     } catch (error) {
         console.error('Erreur création utilisateur:', error);
-        errorMsg.textContent = 'Email ou code déjà utilisé';
+        errorMsg.textContent = 'Erreur lors de la création du compte';
         errorMsg.classList.add('show');
     }
 }
@@ -153,6 +214,11 @@ function closeInfoPopup() {
 async function showUserHome() {
     const app = document.getElementById('app');
     
+    if (!supabase || !currentUser) {
+        app.innerHTML = '<p style="color: red; padding: 20px;">Erreur: Veuillez vous reconnecter</p>';
+        return;
+    }
+
     try {
         const { data: userReclamations, error } = await supabase
             .from('reclamations')
@@ -160,7 +226,11 @@ async function showUserHome() {
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur chargement réclamations:', error);
+            app.innerHTML = '<p style="color: red; padding: 20px;">Erreur lors du chargement des réclamations</p>';
+            return;
+        }
 
         app.innerHTML = `
             <div class="header">
@@ -204,7 +274,7 @@ async function showUserHome() {
             </div>
 
             <h2 style="margin-bottom: 20px;">Mes Réclamations</h2>
-            ${userReclamations.length > 0 ? `
+            ${userReclamations && userReclamations.length > 0 ? `
                 <div class="reclamation-list">
                     ${userReclamations.map(rec => renderReclamationItem(rec, true)).join('')}
                 </div>
@@ -217,6 +287,7 @@ async function showUserHome() {
         `;
     } catch (error) {
         console.error('Erreur chargement:', error);
+        app.innerHTML = '<p style="color: red; padding: 20px;">Erreur lors du chargement</p>';
     }
 }
 
@@ -286,6 +357,18 @@ function addReclamation() {
 }
 
 async function addReclamationAsync(matiere, semestre, note, commentaire, errorMsg) {
+    if (!supabase) {
+        errorMsg.textContent = 'Erreur de connexion à la base de données';
+        errorMsg.classList.add('show');
+        return;
+    }
+
+    if (!currentUser) {
+        errorMsg.textContent = 'Erreur: utilisateur non connecté';
+        errorMsg.classList.add('show');
+        return;
+    }
+
     try {
         const { error } = await supabase
             .from('reclamations')
@@ -299,7 +382,11 @@ async function addReclamationAsync(matiere, semestre, note, commentaire, errorMs
                 }
             ]);
 
-        if (error) throw error;
+        if (error) {
+            errorMsg.textContent = 'Erreur lors de l\'ajout de la réclamation';
+            errorMsg.classList.add('show');
+            return;
+        }
 
         closeReclamationPopup();
         showUserHome();
@@ -347,16 +434,27 @@ function deleteReclamation(id) {
 }
 
 async function deleteReclamationAsync(id) {
+    if (!supabase) {
+        alert('Erreur: Base de données indisponible');
+        return;
+    }
+
     try {
         const { error } = await supabase
             .from('reclamations')
             .delete()
             .eq('id', id);
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur suppression:', error);
+            alert('Erreur lors de la suppression');
+            return;
+        }
+
         showUserHome();
     } catch (error) {
         console.error('Erreur suppression:', error);
+        alert('Erreur lors de la suppression');
     }
 }
 
@@ -397,6 +495,12 @@ function editUserInfo() {
 }
 
 async function updateUserAsync(nom, prenom, niveau, email, errorMsg, oldCreateUser) {
+    if (!supabase) {
+        errorMsg.textContent = 'Erreur: Base de données indisponible';
+        errorMsg.classList.add('show');
+        return;
+    }
+
     try {
         const { error } = await supabase
             .from('users')
@@ -409,7 +513,11 @@ async function updateUserAsync(nom, prenom, niveau, email, errorMsg, oldCreateUs
             })
             .eq('id', currentUser.id);
 
-        if (error) throw error;
+        if (error) {
+            errorMsg.textContent = 'Erreur lors de la mise à jour';
+            errorMsg.classList.add('show');
+            return;
+        }
 
         currentUser.nom = nom;
         currentUser.prenom = prenom;
@@ -430,6 +538,11 @@ async function updateUserAsync(nom, prenom, niveau, email, errorMsg, oldCreateUs
 async function showAdminDashboard() {
     const app = document.getElementById('app');
     
+    if (!supabase) {
+        app.innerHTML = '<p style="color: red; padding: 20px;">Erreur: Base de données indisponible</p>';
+        return;
+    }
+
     try {
         const { data: reclamations, error } = await supabase
             .from('reclamations')
@@ -439,12 +552,16 @@ async function showAdminDashboard() {
             `)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur admin dashboard:', error);
+            app.innerHTML = '<p style="color: red; padding: 20px;">Erreur lors du chargement des données</p>';
+            return;
+        }
 
-        const totalReclamations = reclamations.length;
-        const totalPages = Math.ceil(reclamations.length / itemsPerPage);
+        const totalReclamations = reclamations ? reclamations.length : 0;
+        const totalPages = Math.ceil(totalReclamations / itemsPerPage);
         const startIdx = (currentPage - 1) * itemsPerPage;
-        const paginatedReclamations = reclamations.slice(startIdx, startIdx + itemsPerPage);
+        const paginatedReclamations = reclamations ? reclamations.slice(startIdx, startIdx + itemsPerPage) : [];
 
         app.innerHTML = `
             <div class="admin-header">
@@ -473,8 +590,8 @@ async function showAdminDashboard() {
                     <tbody>
                         ${paginatedReclamations.map(rec => `
                             <tr>
-                                <td>${rec.users.prenom} ${rec.users.nom}</td>
-                                <td><span class="badge">${rec.users.program}</span></td>
+                                <td>${rec.users?.prenom} ${rec.users?.nom}</td>
+                                <td><span class="badge">${rec.users?.program}</span></td>
                                 <td>${rec.matiere}</td>
                                 <td>${rec.semestre}</td>
                                 <td>${rec.note === 'NÉANT' ? '<span class="badge neant">NÉANT</span>' : rec.note}/20</td>
@@ -497,6 +614,7 @@ async function showAdminDashboard() {
         `;
     } catch (error) {
         console.error('Erreur admin dashboard:', error);
+        app.innerHTML = '<p style="color: red; padding: 20px;">Erreur lors du chargement</p>';
     }
 }
 
@@ -506,6 +624,11 @@ function goToPage(page) {
 }
 
 async function showReclamationDetail(id) {
+    if (!supabase) {
+        alert('Erreur: Base de données indisponible');
+        return;
+    }
+
     try {
         const { data: rec, error } = await supabase
             .from('reclamations')
@@ -513,7 +636,11 @@ async function showReclamationDetail(id) {
             .eq('id', id)
             .single();
 
-        if (error || !rec) return;
+        if (error || !rec) {
+            console.error('Erreur chargement détail:', error);
+            alert('Erreur lors du chargement du détail');
+            return;
+        }
 
         const detailContent = document.getElementById('detailContent');
         detailContent.innerHTML = `
@@ -522,27 +649,27 @@ async function showReclamationDetail(id) {
                 <div class="user-info-grid">
                     <div class="info-item">
                         <label>Nom</label>
-                        <value>${rec.users.nom}</value>
+                        <value>${rec.users?.nom || 'N/A'}</value>
                     </div>
                     <div class="info-item">
                         <label>Prénom</label>
-                        <value>${rec.users.prenom}</value>
+                        <value>${rec.users?.prenom || 'N/A'}</value>
                     </div>
                     <div class="info-item">
                         <label>Niveau</label>
-                        <value>${rec.users.niveau}</value>
+                        <value>${rec.users?.niveau || 'N/A'}</value>
                     </div>
                     <div class="info-item">
                         <label>Programme</label>
-                        <value>${rec.users.program}</value>
+                        <value>${rec.users?.program || 'N/A'}</value>
                     </div>
                     <div class="info-item">
                         <label>Email</label>
-                        <value>${rec.users.email}</value>
+                        <value>${rec.users?.email || 'N/A'}</value>
                     </div>
                     <div class="info-item">
                         <label>Date d'inscription</label>
-                        <value>${new Date(rec.users.created_at).toLocaleDateString('fr-FR')}</value>
+                        <value>${rec.users?.created_at ? new Date(rec.users.created_at).toLocaleDateString('fr-FR') : 'N/A'}</value>
                     </div>
                 </div>
             </div>
@@ -577,6 +704,7 @@ async function showReclamationDetail(id) {
         document.getElementById('detailPopup').classList.add('active');
     } catch (error) {
         console.error('Erreur chargement détail:', error);
+        alert('Erreur lors du chargement');
     }
 }
 
@@ -599,6 +727,11 @@ async function downloadReclamations() {
     const note = document.getElementById('filterNote').value;
     const format = document.getElementById('formatSelect').value;
 
+    if (!supabase) {
+        alert('Erreur: Base de données indisponible');
+        return;
+    }
+
     try {
         let query = supabase
             .from('reclamations')
@@ -616,11 +749,15 @@ async function downloadReclamations() {
 
         const { data: filtered, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur filtrage:', error);
+            alert('Erreur lors du téléchargement');
+            return;
+        }
 
-        let finalData = filtered;
+        let finalData = filtered || [];
         if (program) {
-            finalData = filtered.filter(r => r.users.program === program);
+            finalData = finalData.filter(r => r.users && r.users.program === program);
         }
 
         if (format === 'pdf') {
@@ -634,6 +771,7 @@ async function downloadReclamations() {
         closeDownloadPopup();
     } catch (error) {
         console.error('Erreur téléchargement:', error);
+        alert('Erreur lors du téléchargement');
     }
 }
 
@@ -712,4 +850,12 @@ function logout() {
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', initApp);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initSupabase();
+        setTimeout(initApp, 500);
+    });
+} else {
+    initSupabase();
+    setTimeout(initApp, 500);
+}
