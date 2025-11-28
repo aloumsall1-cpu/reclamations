@@ -259,6 +259,45 @@
         </div>
     </div>
 
+    <!-- Edit User Info Popup -->
+    <div id="editUserPopup" class="popup">
+        <div class="popup-content">
+            <h2>Modifier Mes Informations</h2>
+            
+            <div class="form-group">
+                <label>Nom :</label>
+                <input type="text" id="editNomInput" placeholder="Votre nom">
+            </div>
+
+            <div class="form-group">
+                <label>Prénom :</label>
+                <input type="text" id="editPrenomInput" placeholder="Votre prénom">
+            </div>
+
+            <div class="form-group">
+                <label>Niveau :</label>
+                <select id="editNiveauSelect">
+                    <option value="">-- Choisir --</option>
+                    <option value="L1">L1</option>
+                    <option value="L2">L2</option>
+                    <option value="L3">L3</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Email :</label>
+                <input type="email" id="editEmailInput" placeholder="votre.email@exemple.com">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveUserInfo()">Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeEditUserPopup()">Annuler</button>
+            </div>
+
+            <div id="editUserErrorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
     <!-- Initialize Supabase first -->
     <script src="supabase-client.js"></script>
     

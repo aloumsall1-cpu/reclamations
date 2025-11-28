@@ -842,6 +842,90 @@ function logout() {
     renderHomePage();
 }
 
+function editUserInfo() {
+    if (!currentUser) return;
+    
+    // Remplir le formulaire avec les données actuelles
+    document.getElementById('editNomInput').value = currentUser.nom;
+    document.getElementById('editPrenomInput').value = currentUser.prenom;
+    document.getElementById('editNiveauSelect').value = currentUser.niveau;
+    document.getElementById('editEmailInput').value = currentUser.email;
+    
+    // Afficher le popup
+    document.getElementById('editUserPopup').classList.add('active');
+    document.getElementById('editNomInput').focus();
+}
+
+function closeEditUserPopup() {
+    document.getElementById('editUserPopup').classList.remove('active');
+    document.getElementById('editUserErrorMsg').classList.remove('show');
+}
+
+function saveUserInfo() {
+    const nom = document.getElementById('editNomInput').value;
+    const prenom = document.getElementById('editPrenomInput').value;
+    const niveau = document.getElementById('editNiveauSelect').value;
+    const email = document.getElementById('editEmailInput').value;
+    const errorMsg = document.getElementById('editUserErrorMsg');
+
+    errorMsg.classList.remove('show');
+
+    if (!nom || !prenom || !niveau || !email) {
+        errorMsg.textContent = 'Veuillez remplir tous les champs';
+        errorMsg.classList.add('show');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        errorMsg.textContent = 'Email invalide';
+        errorMsg.classList.add('show');
+        return;
+    }
+
+    saveUserInfoAsync(nom, prenom, niveau, email, errorMsg);
+}
+
+async function saveUserInfoAsync(nom, prenom, niveau, email, errorMsg) {
+    if (!supabase || !currentUser) {
+        errorMsg.textContent = 'Erreur de connexion';
+        errorMsg.classList.add('show');
+        return;
+    }
+
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({
+                nom,
+                prenom,
+                niveau,
+                email,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+        if (error) {
+            console.error('Erreur mise à jour:', error);
+            errorMsg.textContent = 'Erreur lors de la mise à jour: ' + (error.message || 'Réessayez');
+            errorMsg.classList.add('show');
+            return;
+        }
+
+        // Mettre à jour l'utilisateur local
+        currentUser.nom = nom;
+        currentUser.prenom = prenom;
+        currentUser.niveau = niveau;
+        currentUser.email = email;
+
+        closeEditUserPopup();
+        showUserHome();
+    } catch (error) {
+        console.error('Erreur:', error);
+        errorMsg.textContent = 'Erreur lors de la mise à jour';
+        errorMsg.classList.add('show');
+    }
+}
+
 // Initialize
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
