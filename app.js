@@ -93,6 +93,10 @@ async function checkLogin() {
         console.log('Utilisateur trouvé:', data);
         currentUser = data;
 
+        // Fermer les popups
+        document.getElementById('loginPopup').classList.remove('active');
+        document.getElementById('infoPopup').classList.remove('active');
+
         // Vérifier si Admin (P35 / 0099)
         if (program === 'P35' && code === '0099') {
             showAdminDashboard();
@@ -305,7 +309,6 @@ function renderReclamationItem(rec, isUserPage = false) {
             <div class="reclamation-item-actions">
                 ${isUserPage ? `
                     <button class="btn btn-secondary btn-small" onclick="editReclamation(${rec.id})">Modifier</button>
-                    <button class="btn btn-danger btn-small" onclick="deleteReclamation(${rec.id})">Supprimer</button>
                 ` : `
                     <button class="btn btn-primary btn-small" onclick="showReclamationDetail(${rec.id})">Voir Détails</button>
                 `}
