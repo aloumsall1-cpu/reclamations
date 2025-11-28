@@ -1,51 +1,38 @@
 // Supabase Configuration
-let supabase = null;
-
 const SUPABASE_URL = 'https://rijihuzzuxeeyqnnxore.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpamlodXp6dXhlZXlxbm54b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTkyMzcsImV4cCI6MjA3OTkzNTIzN30.mYz9pX5qZ8vW3kL2nM1oP4qR5sT6uV7wX8yZ9aB0cD1'
+
+let supabase = null
 
 let currentUser = null;
 let currentPage = 1;
 const itemsPerPage = 10;
 
 // Initialiser Supabase
-async function initSupabase() {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    script.onload = () => {
+function initSupabase() {
+    if (window.supabase && window.supabase.createClient) {
         const { createClient } = window.supabase;
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase connecté');
-    };
-    script.onerror = () => {
-        console.error('❌ Erreur chargement Supabase');
-        showError('Erreur de connexion à la base de données');
-    };
-    document.head.appendChild(script);
+        return true;
+    }
+    return false;
 }
 
 // Initialize App
-async function initApp() {
-    await new Promise(resolve => {
-        if (supabase) {
-            resolve();
-        } else {
-            // Attendre que Supabase soit chargé
-            const checkSupabase = setInterval(() => {
-                if (window.supabase && !supabase) {
-                    const { createClient } = window.supabase;
-                    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    clearInterval(checkSupabase);
-                    resolve();
-                }
-            }, 100);
-            setTimeout(() => {
-                clearInterval(checkSupabase);
-                resolve();
-            }, 5000);
-        }
-    });
-    renderHomePage();
+function initApp() {
+    // Essayer d'initialiser Supabase
+    if (!initSupabase()) {
+        // Réessayer après un délai
+        setTimeout(() => {
+            if (!initSupabase()) {
+                showError('Supabase n\'a pas pu se charger');
+            }
+            renderHomePage();
+        }, 500);
+    } else {
+        renderHomePage();
+    }
 }
 
 function showError(message) {
@@ -851,11 +838,7 @@ function logout() {
 
 // Initialize
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        initSupabase();
-        setTimeout(initApp, 500);
-    });
+    document.addEventListener('DOMContentLoaded', initApp);
 } else {
-    initSupabase();
-    setTimeout(initApp, 500);
+    initApp();
 }
