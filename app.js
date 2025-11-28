@@ -1,38 +1,34 @@
-// Supabase Configuration
-const SUPABASE_URL = 'https://rijihuzzuxeeyqnnxore.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpamlodXp6dXhlZXlxbm54b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNTkyMzcsImV4cCI6MjA3OTkzNTIzN30.mYz9pX5qZ8vW3kL2nM1oP4qR5sT6uV7wX8yZ9aB0cD1'
-
-let supabase = null
+// App Configuration
+let supabase = null;
 
 let currentUser = null;
 let currentPage = 1;
 const itemsPerPage = 10;
 
-// Initialiser Supabase
-function initSupabase() {
-    if (window.supabase && window.supabase.createClient) {
-        const { createClient } = window.supabase;
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Supabase connecté');
-        return true;
-    }
-    return false;
-}
+// Écouter l'événement Supabase prêt
+window.addEventListener('supabaseReady', () => {
+    supabase = getSupabaseClient();
+    console.log('✅ App: Supabase client available');
+});
+
+window.addEventListener('supabaseFailed', () => {
+    console.error('❌ App: Supabase client failed to load');
+});
 
 // Initialize App
 function initApp() {
-    // Essayer d'initialiser Supabase
-    if (!initSupabase()) {
-        // Réessayer après un délai
-        setTimeout(() => {
-            if (!initSupabase()) {
-                showError('Supabase n\'a pas pu se charger');
-            }
-            renderHomePage();
-        }, 500);
+    // Vérifier si Supabase est déjà chargé
+    if (typeof getSupabaseClient === 'function' && getSupabaseClient()) {
+        supabase = getSupabaseClient();
+        console.log('✅ Supabase already loaded');
     } else {
-        renderHomePage();
+        console.log('⏳ Waiting for Supabase...');
+        // Attendre le chargement
+        setTimeout(initApp, 500);
+        return;
     }
+    
+    renderHomePage();
 }
 
 function showError(message) {
@@ -60,34 +56,41 @@ async function checkLogin() {
     }
 
     if (!supabase) {
-        errorMsg.textContent = 'Erreur de connexion à la base de données';
+        console.warn('Supabase not ready yet, waiting...');
+        errorMsg.textContent = 'Connexion en cours...';
         errorMsg.classList.add('show');
+        setTimeout(() => checkLogin(), 1000);
         return;
     }
 
     try {
+        console.log(`Vérification: ${program} / ${code}`);
+        
         // Requête Supabase
         const { data, error } = await supabase
             .from('users')
             .select('*')
             .eq('program', program)
             .eq('code', code)
-            .single();
+            .maybeSingle(); // Retourner null au lieu d'erreur si pas trouvé
 
         if (error) {
+            console.error('Erreur requête:', error);
+            throw error;
+        }
+
+        if (!data) {
             // Utilisateur non trouvé → Créer un compte
-            if (error.code === 'PGRST116') {
-                document.getElementById('programSelect').value = program;
-                document.getElementById('codeInput').value = code;
-                closeLoginPopup();
-                openInfoPopup(program, code);
-                return;
-            } else {
-                throw error;
-            }
+            console.log('Utilisateur non trouvé, création de compte');
+            document.getElementById('programSelect').value = program;
+            document.getElementById('codeInput').value = code;
+            closeLoginPopup();
+            openInfoPopup(program, code);
+            return;
         }
 
         // Utilisateur trouvé
+        console.log('Utilisateur trouvé:', data);
         currentUser = data;
 
         // Vérifier si Admin (P35 / 0099)
@@ -98,7 +101,7 @@ async function checkLogin() {
         }
     } catch (error) {
         console.error('Erreur login:', error);
-        errorMsg.textContent = 'Erreur de connexion. Réessayez.';
+        errorMsg.textContent = 'Erreur de connexion: ' + (error.message || 'Réessayez');
         errorMsg.classList.add('show');
     }
 }

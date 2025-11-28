@@ -9,10 +9,10 @@
 <body>
     <div id="app"></div>
 
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Login Popup -->
+    <!-- Supabase Client Library -->
+    <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.5/+esm" type="module"></script>
+    
+    <!-- App Script -->
     <div id="loginPopup" class="popup active">
         <div class="popup-content">
             <h2>Connexion</h2>
@@ -259,6 +259,10 @@
         </div>
     </div>
 
+    <!-- Initialize Supabase first -->
+    <script src="supabase-client.js"></script>
+    
+    <!-- Then load app -->
     <script src="app.js"></script>
 </body>
 </html>
