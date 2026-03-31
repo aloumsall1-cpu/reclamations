@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦁 Lions de la Téranga – Sénégal Football</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00853F;
+    --yellow: #FDEF42;
+    --red: #E31B23;
+    --dark: #0a0a0a;
+    --dark2: #111111;
+    --dark3: #1a1a1a;
+    --card: #161616;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0f0;
+    --muted: #888;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,133,63,0.25) 0%, transparent 65%),
+                radial-gradient(ellipse at 0% 100%, rgba(227,27,35,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(253,239,66,0.1) 0%, transparent 50%),
+                var(--dark);
+  }
+  .hero::before {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px),
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px);
+    pointer-events:none;
+  }
+  .flag-stripe {
+    position:absolute; top:0; left:0; right:0;
+    display:flex; height:6px;
+  }
+  .flag-stripe span { flex:1; }
+  .flag-stripe span:nth-child(1) { background:var(--green); }
+  .flag-stripe span:nth-child(2) { background:var(--yellow); }
+  .flag-stripe span:nth-child(3) { background:var(--red); }
+  .hero-badge {
+    font-family:'Bebas Neue'; font-size:clamp(11px,1.5vw,14px);
+    letter-spacing:4px; color:var(--yellow);
+    background:rgba(253,239,66,0.07); border:1px solid rgba(253,239,66,0.2);
+    padding:6px 18px; border-radius:2px; margin-bottom:28px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-title {
+    font-family:'Bebas Neue'; font-size:clamp(72px,12vw,160px);
+    line-height:0.9; letter-spacing:2px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+  .hero-title .lion { color:var(--yellow); }
+  .hero-title .teranga { color:var(--green); }
+  .hero-sub {
+    font-family:'Barlow Condensed'; font-size:clamp(16px,3vw,28px);
+    letter-spacing:6px; color:var(--muted); margin-top:16px; text-transform:uppercase;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .hero-stats {
+    display:flex; gap:48px; margin-top:56px; flex-wrap:wrap; justify-content:center;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .hero-stat { text-align:center; }
+  .hero-stat .num {
+    font-family:'Bebas Neue'; font-size:52px; line-height:1;
+    background: linear-gradient(180deg, #fff 0%, var(--yellow) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero-stat .lbl { font-size:11px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-top:4px; }
+  .scroll-hint {
+    position:absolute; bottom:32px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    color:var(--muted); font-size:11px; letter-spacing:3px;
+    animation: bounce 2s infinite;
+  }
+  .scroll-hint svg { width:20px; height:20px; fill:var(--muted); }
+
+  /* NAV */
+  nav {
+    position:sticky; top:0; z-index:100;
+    background:rgba(10,10,10,0.92); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 40px; height:64px;
+  }
+  .nav-logo { font-family:'Bebas Neue'; font-size:22px; letter-spacing:2px; color:var(--yellow); }
+  .nav-tabs { display:flex; gap:4px; }
+  .nav-tab {
+    font-family:'Barlow Condensed'; font-size:13px; letter-spacing:2px; text-transform:uppercase;
+    padding:8px 16px; border-radius:4px; border:none; background:transparent;
+    color:var(--muted); cursor:pointer; transition:all 0.2s;
+  }
+  .nav-tab:hover { color:var(--text); background:rgba(255,255,255,0.05); }
+  .nav-tab.active { color:var(--yellow); background:rgba(253,239,66,0.08); }
+
+  /* SECTIONS */
+  section { padding:80px 40px; max-width:1300px; margin:0 auto; display:none; }
+  section.active { display:block; }
+  .section-title {
+    font-family:'Bebas Neue'; font-size:clamp(36px,5vw,56px); letter-spacing:2px;
+    margin-bottom:8px; position:relative; display:inline-block;
+  }
+  .section-title::after {
+    content:''; display:block; height:3px; width:60px;
+    background:linear-gradient(90deg, var(--green), var(--yellow));
+    margin-top:8px; border-radius:2px;
+  }
+  .section-sub { color:var(--muted); font-size:14px; letter-spacing:2px; text-transform:uppercase; margin-bottom:48px; }
+
+  /* MATCHES */
+  .matches-grid { display:flex; flex-direction:column; gap:12px; }
+  .match-card {
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:20px 28px; cursor:pointer; transition:all 0.25s;
+    display:grid; grid-template-columns:1fr auto 1fr auto; align-items:center; gap:16px;
+  }
+  .match-card:hover { border-color:rgba(253,239,66,0.25); transform:translateX(4px); background:#1c1c1c; }
+  .match-card.win { border-left:3px solid var(--green); }
+  .match-card.loss { border-left:3px solid var(--red); }
+  .match-card.draw { border-left:3px solid var(--yellow); }
+  .match-card.upcoming { border-left:3px solid #555; border-style:dashed; }
+  .team-block { display:flex; align-items:center; gap:12px; }
+  .team-block.right { flex-direction:row-reverse; text-align:right; }
+  .flag-icon {
+    width:40px; height:28px; border-radius:3px; object-fit:cover;
+    border:1px solid rgba(255,255,255,0.1);
+  }
+  .flag-placeholder {
+    width:40px; height:28px; border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; background:rgba(255,255,255,0.05);
+  }
+  .team-name { font-family:'Barlow Condensed'; font-size:18px; font-weight:600; letter-spacing:1px; }
+  .score-box { text-align:center; }
+  .score {
+    font-family:'Bebas Neue'; font-size:36px; letter-spacing:4px;
+    background:linear-gradient(180deg,#fff,#aaa);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .score.upcoming { font-size:20px; color:var(--muted); -webkit-text-fill-color:var(--muted); }
+  .score-comp { font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:4px; }
+  .score-date { font-size:11px; color:var(--muted); }
+  .match-arrow { color:var(--muted); font-size:18px; transition:color 0.2s; }
+  .match-card:hover .match-arrow { color:var(--yellow); }
+  .result-badge {
+    padding:3px 8px; border-radius:3px; font-size:11px; font-weight:700; letter-spacing:2px;
+  }
+  .badge-win { background:rgba(0,133,63,0.2); color:var(--green); }
+  .badge-loss { background:rgba(227,27,35,0.2); color:var(--red); }
+  .badge-draw { background:rgba(253,239,66,0.15); color:var(--yellow); }
+  .badge-upcoming { background:rgba(100,100,100,0.15); color:#777; }
+
+  /* MATCH MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px);
+    z-index:200; display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--dark3); border:1px solid rgba(255,255,255,0.1); border-radius:12px;
+    width:100%; max-width:640px; max-height:85vh; overflow-y:auto;
+    animation:slideUp 0.3s ease;
+  }
+  .modal-header {
+    padding:24px 28px 16px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:1px solid var(--border);
+  }
+  .modal-close {
+    background:none; border:none; color:var(--muted); cursor:pointer; font-size:24px;
+    line-height:1; transition:color 0.2s;
+  }
+  .modal-close:hover { color:#fff; }
+  .modal-body { padding:28px; }
+  .modal-score-row {
+    display:grid; grid-template-columns:1fr auto 1fr;
+    align-items:center; gap:20px; margin-bottom:28px; text-align:center;
+  }
+  .modal-team { text-align:center; }
+  .modal-team-flag { font-size:48px; margin-bottom:8px; }
+  .modal-team-name { font-family:'Barlow Condensed'; font-size:20px; font-weight:700; }
+  .modal-scoreboard {
+    font-family:'Bebas Neue'; font-size:64px; letter-spacing:8px;
+    background:linear-gradient(180deg,#fff,var(--yellow));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .modal-scoreboard.upcoming { font-size:28px; -webkit-text-fill-color:var(--muted); letter-spacing:4px; }
+  .modal-meta { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .meta-item {
+    background:var(--card); border-radius:6px; padding:14px 16px;
+    border:1px solid var(--border);
+  }
+  .meta-label { font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+  .meta-value { font-family:'Barlow Condensed'; font-size:16px; font-weight:600; }
+  .goals-list { margin-top:16px; }
+  .goals-title { font-family:'Barlow Condensed'; font-size:14px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
+  .goal-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .goal-min { font-family:'Bebas Neue'; font-size:16px; color:var(--yellow); min-width:36px; }
+  .goal-player { color:var(--text); }
+  .goal-team-flag { font-size:16px; }
+
+  /* JOUEURS */
+  .players-filter { display:flex; gap:8px; margin-bottom:32px; flex-wrap:wrap; }
+  .filter-btn {
+    font-family:'Barlow Condensed'; font-size:12px; letter-spacing:2px; text-transform:uppercase;
+    padding:8px 16px; border-radius:4px; border:1px solid var(--border);
+    background:transparent; color:var(--muted); cursor:pointer; transition:all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background:rgba(253,239,66,0.08); color:var(--yellow); border-color:rgba(253,239,66,0.3);
+  }
+  .players-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px; }
+  .player-card {
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:20px; transition:all 0.25s; cursor:default;
+    position:relative; overflow:hidden;
+  }
+  .player-card::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,transparent 60%,rgba(253,239,66,0.03) 100%);
+  }
+  .player-card:hover { border-color:rgba(253,239,66,0.2); transform:translateY(-2px); }
+  .player-pos {
+    font-size:10px; letter-spacing:3px; text-transform:uppercase; font-weight:700;
+    padding:3px 8px; border-radius:3px; display:inline-block; margin-bottom:12px;
+  }
+  .pos-gk { background:rgba(253,239,66,0.15); color:var(--yellow); }
+  .pos-def { background:rgba(0,133,63,0.15); color:var(--green); }
+  .pos-mid { background:rgba(59,130,246,0.15); color:#60a5fa; }
+  .pos-att { background:rgba(227,27,35,0.15); color:#f87171; }
+  .player-num { font-family:'Bebas Neue'; font-size:52px; color:rgba(255,255,255,0.06); position:absolute; top:10px; right:14px; line-height:1; }
+  .player-name { font-family:'Barlow Condensed'; font-size:20px; font-weight:700; margin-bottom:4px; }
+  .player-club { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .player-stats-mini { display:flex; gap:12px; }
+  .ps-item { text-align:center; }
+  .ps-num { font-family:'Bebas Neue'; font-size:22px; color:var(--yellow); }
+  .ps-lbl { font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+  .star-badge { color:var(--yellow); font-size:14px; margin-left:6px; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; margin-bottom:48px; }
+  .stat-card {
+    background:var(--card); border:1px solid var(--border); border-radius:8px; padding:24px;
+    position:relative; overflow:hidden;
+  }
+  .stat-card::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,var(--green),var(--yellow));
+  }
+  .stat-icon { font-size:32px; margin-bottom:12px; }
+  .stat-value { font-family:'Bebas Neue'; font-size:48px; color:var(--yellow); line-height:1; }
+  .stat-label { font-size:13px; color:var(--muted); margin-top:4px; letter-spacing:1px; }
+  .bar-chart { margin-top:40px; }
+  .bar-title { font-family:'Barlow Condensed'; font-size:20px; font-weight:700; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:20px; }
+  .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .bar-label { font-size:13px; min-width:130px; color:var(--text); }
+  .bar-track { flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--green),var(--yellow)); transition:width 1s ease; }
+  .bar-val { font-family:'Bebas Neue'; font-size:16px; color:var(--yellow); min-width:30px; text-align:right; }
+  .pie-section { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:48px; align-items:center; }
+  .pie-wrap { display:flex; flex-direction:column; align-items:center; }
+  .pie-chart { width:180px; height:180px; border-radius:50%; position:relative; margin-bottom:20px; }
+  .pie-labels { display:flex; flex-direction:column; gap:10px; }
+  .pie-label-item { display:flex; align-items:center; gap:10px; font-size:13px; }
+  .pie-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .history-table { width:100%; border-collapse:collapse; margin-top:48px; }
+  .history-table th { font-family:'Barlow Condensed'; font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); text-align:left; padding:10px 16px; border-bottom:1px solid var(--border); }
+  .history-table td { padding:14px 16px; font-size:14px; border-bottom:1px solid var(--border); }
+  .history-table tr:hover td { background:rgba(255,255,255,0.02); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(8px);} }
+  @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+
+  /* PALMARÈS */
+  .trophies-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+  .trophy-card {
+    background:var(--card); border:1px solid var(--border); border-radius:8px; padding:24px;
+    text-align:center; transition:all 0.25s;
+  }
+  .trophy-card:hover { border-color:rgba(253,239,66,0.3); transform:translateY(-3px); }
+  .trophy-card .trophy-icon { font-size:48px; margin-bottom:12px; }
+  .trophy-card .trophy-title { font-family:'Barlow Condensed'; font-size:18px; font-weight:700; margin-bottom:4px; }
+  .trophy-card .trophy-year { font-size:12px; color:var(--yellow); letter-spacing:2px; }
+  .trophy-card .trophy-note { font-size:11px; color:var(--muted); margin-top:6px; }
+  .wc-group { background:linear-gradient(135deg,rgba(0,133,63,0.08),rgba(253,239,66,0.05)); border:1px solid rgba(253,239,66,0.15); border-radius:12px; padding:28px; margin-top:40px; }
+  .wc-title { font-family:'Bebas Neue'; font-size:28px; letter-spacing:2px; color:var(--yellow); margin-bottom:20px; }
+  .wc-group-table { width:100%; border-collapse:collapse; }
+  .wc-group-table th { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+  .wc-group-table td { padding:12px; font-size:14px; border-bottom:1px solid var(--border); }
+  .wc-group-table tr.senegal td { color:var(--yellow); font-weight:600; }
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    nav { padding:0 16px; }
+    section { padding:60px 16px; }
+    .match-card { grid-template-columns:1fr auto 1fr; gap:8px; padding:14px 16px; }
+    .modal-score-row { gap:10px; }
+    .modal-scoreboard { font-size:48px; }
+    .pie-section { grid-template-columns:1fr; }
+    .hero-stats { gap:24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <div class="flag-stripe"><span></span><span></span><span></span></div>
+  <div class="hero-badge">🦁 LIONS DE LA TÉRANGA</div>
+  <div class="hero-title">
+    <div class="lion">SÉNÉGAL</div>
+    <div class="teranga">FOOTBALL</div>
+  </div>
+  <div class="hero-sub">Champions d'Afrique • CAN 2021 & 2025</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">2</div><div class="lbl">Titres CAN</div></div>
+    <div class="hero-stat"><div class="num">3</div><div class="lbl">Coupes du Monde</div></div>
+    <div class="hero-stat"><div class="num">#12</div><div class="lbl">FIFA Ranking</div></div>
+    <div class="hero-stat"><div class="num">80K</div><div class="lbl">Stade Léopold S.</div></div>
+  </div>
+  <div class="scroll-hint">
+    <span>DÉCOUVRIR</span>
+    <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🦁 SÉNÉGAL</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('matches')">Matchs</button>
+    <button class="nav-tab" onclick="showSection('joueurs')">Joueurs</button>
+    <button class="nav-tab" onclick="showSection('stats')">Statistiques</button>
+    <button class="nav-tab" onclick="showSection('palmares')">Palmarès</button>
+  </div>
+</nav>
+
+<!-- SECTION MATCHS -->
+<section id="matches" class="active">
+  <div class="section-title">Matchs</div>
+  <div class="section-sub">Résultats récents & prochaines rencontres</div>
+  
+  <div class="matches-grid" id="matchesGrid"></div>
+</section>
+
+<!-- SECTION JOUEURS -->
+<section id="joueurs">
+  <div class="section-title">Effectif</div>
+  <div class="section-sub">Sélection nationale 2026</div>
+  <div class="players-filter">
+    <button class="filter-btn active" onclick="filterPlayers('all',this)">Tous</button>
+    <button class="filter-btn" onclick="filterPlayers('GK',this)">Gardiens</button>
+    <button class="filter-btn" onclick="filterPlayers('DEF',this)">Défenseurs</button>
+    <button class="filter-btn" onclick="filterPlayers('MID',this)">Milieux</button>
+    <button class="filter-btn" onclick="filterPlayers('ATT',this)">Attaquants</button>
+  </div>
+  <div class="players-grid" id="playersGrid"></div>
+</section>
+
+<!-- SECTION STATS -->
+<section id="stats">
+  <div class="section-title">Statistiques</div>
+  <div class="section-sub">Performance & données analytiques</div>
+  <div class="stats-grid" id="statsCards"></div>
+  <div class="bar-chart">
+    <div class="bar-title">Buteurs de la CAN 2025</div>
+    <div id="barChartCAN"></div>
+  </div>
+  <div class="pie-section">
+    <div class="pie-wrap">
+      <div class="bar-title" style="text-align:center">Bilan récent (derniers 10 matchs)</div>
+      <canvas id="pieCanvas" width="180" height="180"></canvas>
+      <div class="pie-labels" id="pieLabels"></div>
+    </div>
+    <div>
+      <div class="bar-title">Stats clés saison 2025-26</div>
+      <div id="keyStats"></div>
+    </div>
+  </div>
+  <div>
+    <div class="bar-title" style="margin-top:48px">Historique Coupe du Monde</div>
+    <table class="history-table">
+      <thead><tr><th>Année</th><th>Phase</th><th>Résultat</th><th>Faits marquants</th></tr></thead>
+      <tbody id="historyTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION PALMARES -->
+<section id="palmares">
+  <div class="section-title">Palmarès</div>
+  <div class="section-sub">Titres et distinctions</div>
+  <div class="trophies-grid" id="tropheesGrid"></div>
+  <div class="wc-group">
+    <div class="wc-title">🌍 Coupe du Monde 2026 — Groupe I</div>
+    <table class="wc-group-table">
+      <thead><tr><th>Équipe</th><th>Conf.</th><th>Classement FIFA</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr><td>🇫🇷 France</td><td>UEFA</td><td>#2</td><td>Favori</td></tr>
+        <tr class="senegal"><td>🇸🇳 Sénégal</td><td>CAF</td><td>#12</td><td>⭐ Champion d'Afrique</td></tr>
+        <tr><td>🇳🇴 Norvège</td><td>UEFA</td><td>#22</td><td>Qualifié</td></tr>
+        <tr><td>🏳️ Barragiste (BOL/SUR/IRQ)</td><td>–</td><td>–</td><td>À déterminer</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MODAL MATCH -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="matchModal">
+    <div class="modal-header">
+      <div>
+        <div style="font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;" id="modalComp"></div>
+        <div style="font-family:'Barlow Condensed';font-size:22px;font-weight:700;margin-top:4px;" id="modalTitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-score-row">
+        <div class="modal-team">
+          <div class="modal-team-flag" id="mFlag1"></div>
+          <div class="modal-team-name" id="mTeam1"></div>
+        </div>
+        <div class="modal-scoreboard" id="mScore"></div>
+        <div class="modal-team">
+          <div class="modal-team-flag" id="mFlag2"></div>
+          <div class="modal-team-name" id="mTeam2"></div>
+        </div>
+      </div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <div class="goals-list" id="modalGoals"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// DATA
+const matches = [
+  {
+    id:1, date:'18 Jan 2026', comp:'CAN 2025 — Finale', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Maroc', flag2:'🇲🇦',
+    score:'1-0', venue:'Rabat', attendance:'90 000',
+    goals:[{min:94,player:'Pape Gueye',team:'🇸🇳'}],
+    note:'Victoire historique ! Deuxième titre CAN des Lions. Pape Gueye marque à la 94e. (Résultat contesté par la CAF.)'
+  },
+  {
+    id:2, date:'14 Jan 2026', comp:'CAN 2025 — Demi-finale', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Égypte', flag2:'🇪🇬',
+    score:'1-0', venue:'Casablanca', attendance:'65 000',
+    goals:[{min:78,player:'Sadio Mané',team:'🇸🇳'}],
+    note:'Sadio Mané qualifie le Sénégal pour sa 3e finale consécutive de CAN.'
+  },
+  {
+    id:3, date:'09 Jan 2026', comp:'CAN 2025 — Quart de finale', type:'win',
+    team1:'Mali', flag1:'🇲🇱', team2:'Sénégal', flag2:'🇸🇳',
+    score:'0-1', venue:'Agadir', attendance:'42 000',
+    goals:[{min:27,player:'Iliman Ndiaye',team:'🇸🇳'}],
+    note:'Victoire solide contre le voisin Malien.'
+  },
+  {
+    id:4, date:'03 Jan 2026', comp:'CAN 2025 — 8e finale', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Soudan', flag2:'🇸🇩',
+    score:'3-1', venue:'Marrakech', attendance:'38 000',
+    goals:[
+      {min:29,player:'Pape Gueye',team:'🇸🇳'},
+      {min:'45+3',player:'Pape Gueye',team:'🇸🇳'},
+      {min:77,player:'Ibrahim Mbaye',team:'🇸🇳'},
+      {min:6,player:'Aamir Abdallah',team:'🇸🇩'}
+    ],
+    note:'Doublé de Pape Gueye. Le Sénégal déroule en phase à élimination directe.'
+  },
+  {
+    id:5, date:'26 Dec 2025', comp:'CAN 2025 — Groupe D', type:'draw',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'RD Congo', flag2:'🇨🇩',
+    score:'1-1', venue:'Rabat', attendance:'35 000',
+    goals:[{min:55,player:'Sadio Mané',team:'🇸🇳'},{min:72,player:'Cédric Bakambu',team:'🇨🇩'}],
+    note:'Seul match nul de la compétition pour les Lions.'
+  },
+  {
+    id:6, date:'21 Dec 2025', comp:'CAN 2025 — Groupe D', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Bénin', flag2:'🇧🇯',
+    score:'3-0', venue:'Fès', attendance:'28 000',
+    goals:[
+      {min:18,player:'Nicolas Jackson',team:'🇸🇳'},
+      {min:54,player:'Ismaïla Sarr',team:'🇸🇳'},
+      {min:81,player:'Boulaye Dia',team:'🇸🇳'}
+    ],
+    note:'Victoire nette et sans discussion.'
+  },
+  {
+    id:7, date:'17 Dec 2025', comp:'CAN 2025 — Groupe D', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Botswana', flag2:'🇧🇼',
+    score:'3-0', venue:'Oujda', attendance:'22 000',
+    goals:[
+      {min:12,player:'Sadio Mané',team:'🇸🇳'},
+      {min:34,player:'Pape Gueye',team:'🇸🇳'},
+      {min:68,player:'Iliman Ndiaye',team:'🇸🇳'}
+    ],
+    note:'Entrée en lice parfaite dans la compétition.'
+  },
+  {
+    id:8, date:'28 Mar 2026', comp:'Match amical', type:'win',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Pérou', flag2:'🇵🇪',
+    score:'2-0', venue:'Dakar', attendance:'45 000',
+    goals:[
+      {min:33,player:'Nicolas Jackson',team:'🇸🇳'},
+      {min:71,player:'Boulaye Dia',team:'🇸🇳'}
+    ],
+    note:'Victoire convaincante en match de préparation pour la Coupe du Monde.'
+  },
+  {
+    id:9, date:'31 Mar 2026', comp:'Match amical', type:'upcoming',
+    team1:'Sénégal', flag1:'🇸🇳', team2:'Gambie', flag2:'🇬🇲',
+    score:'vs', venue:'Dakar', attendance:'–',
+    goals:[], note:'Derby de voisins, match amical de préparation.'
+  },
+  {
+    id:10, date:'31 Mai 2026', comp:'Match amical', type:'upcoming',
+    team1:'États-Unis', flag1:'🇺🇸', team2:'Sénégal', flag2:'🇸🇳',
+    score:'vs', venue:'USA', attendance:'–',
+    goals:[], note:'Dernier test avant la Coupe du Monde.'
+  },
+  {
+    id:11, date:'16 Juin 2026', comp:'Coupe du Monde 2026 — Journée 1', type:'upcoming',
+    team1:'France', flag1:'🇫🇷', team2:'Sénégal', flag2:'🇸🇳',
+    score:'vs', venue:'États-Unis', attendance:'–',
+    goals:[], note:'Revanche du match mythique 2002 (Sénégal avait battu la France 1-0). Groupe I, Coupe du Monde 2026.'
+  },
+  {
+    id:12, date:'23 Juin 2026', comp:'Coupe du Monde 2026 — Journée 2', type:'upcoming',
+    team1:'Norvège', flag1:'🇳🇴', team2:'Sénégal', flag2:'🇸🇳',
+    score:'vs', venue:'États-Unis', attendance:'–',
+    goals:[], note:'Deuxième match de poule contre la Norvège d\'Erling Haaland.'
+  }
+];
+
+const players = [
+  // GK
+  {pos:'GK',num:1,name:'Édouard Mendy',club:'Al Ahli (SAO)',age:33,caps:50,goals:0,star:true},
+  {pos:'GK',num:23,name:'Mory Diaw',club:'Le Havre (FRA)',age:32,caps:8,goals:0},
+  {pos:'GK',num:16,name:'Yehvann Diouf',club:'Nice (FRA)',age:27,caps:4,goals:0},
+  // DEF
+  {pos:'DEF',num:3,name:'Kalidou Koulibaly',club:'Al Hilal (SAO)',age:34,caps:85,goals:5,star:true},
+  {pos:'DEF',num:19,name:'Moussa Niakhaté',club:'Lyon (FRA)',age:29,caps:30,goals:1},
+  {pos:'DEF',num:2,name:'Mamadou Sarr',club:'Chelsea (ANG)',age:20,caps:10,goals:0},
+  {pos:'DEF',num:14,name:'Ismail Jakobs',club:'Galatasaray (TUR)',age:26,caps:20,goals:0},
+  {pos:'DEF',num:25,name:'Malick Diouf',club:'West Ham (ANG)',age:21,caps:12,goals:0},
+  {pos:'DEF',num:4,name:'Abdoulaye Seck',club:'Maccabi Haïfa (ISR)',age:33,caps:22,goals:1},
+  {pos:'DEF',num:15,name:'Krépin Diatta',club:'Monaco (FRA)',age:26,caps:38,goals:4},
+  // MID
+  {pos:'MID',num:5,name:'Idrissa Gana Gueye',club:'Everton (ANG)',age:35,caps:100,goals:3,star:true},
+  {pos:'MID',num:8,name:'Pape Gueye',club:'Villarreal (ESP)',age:26,caps:30,goals:5},
+  {pos:'MID',num:11,name:'Pape Matar Sarr',club:'Tottenham (ANG)',age:22,caps:25,goals:2},
+  {pos:'MID',num:27,name:'Lamine Camara',club:'Monaco (FRA)',age:21,caps:18,goals:3},
+  {pos:'MID',num:21,name:'Ismaïla Sarr',club:'Crystal Palace (ANG)',age:27,caps:55,goals:12},
+  {pos:'MID',num:13,name:'Iliman Ndiaye',club:'Everton (ANG)',age:25,caps:28,goals:6},
+  {pos:'MID',num:7,name:'Habib Diarra',club:'Sunderland (ANG)',age:21,caps:12,goals:2},
+  // ATT
+  {pos:'ATT',num:10,name:'Sadio Mané',club:'Al Nassr (SAO)',age:33,caps:102,goals:36,star:true},
+  {pos:'ATT',num:9,name:'Nicolas Jackson',club:'Bayern Munich (ALL)',age:23,caps:22,goals:8},
+  {pos:'ATT',num:18,name:'Boulaye Dia',club:'Lazio (ITA)',age:28,caps:40,goals:11},
+  {pos:'ATT',num:22,name:'Ibrahim Mbaye',club:'PSG (FRA)',age:17,caps:8,goals:2},
+  {pos:'ATT',num:17,name:'Cherif Ndiaye',club:'Samsunspor (TUR)',age:29,caps:20,goals:6},
+  {pos:'ATT',num:6,name:'Habib Diallo',club:'Metz (FRA)',age:29,caps:30,goals:9},
+];
+
+const trophees = [
+  {icon:'🏆', title:'CAN 2025', year:'Janvier 2026', note:'Champions d\'Afrique (2e titre)'},
+  {icon:'🏆', title:'CAN 2021', year:'Février 2022', note:'1er titre continental des Lions'},
+  {icon:'🥈', title:'CAN 2019 Finaliste', year:'2019', note:'Défaite contre l\'Algérie'},
+  {icon:'🥈', title:'CAN 2002 Finaliste', year:'2002', note:'Défaite aux tirs au but'},
+  {icon:'🌍', title:'Coupe du Monde 2026', year:'Juin 2026', note:'Qualifié – Groupe I'},
+  {icon:'⭐', title:'Coupe du Monde 2002', year:'2002', note:'Quarts de finale historiques'},
+  {icon:'🌟', title:'Meilleur joueur CAN 2025', year:'2026', note:'Sadio Mané'},
+  {icon:'🦁', title:'Meilleur équipe africaine', year:'2022 & 2025', note:'CAF Awards'},
+];
+
+const history = [
+  {year:'2026', phase:'À venir', result:'Qualifié', note:'Groupe I avec France, Norvège, barragiste'},
+  {year:'2022', phase:'8e de finale', result:'Élimination', note:'Défaite 3-0 contre l\'Angleterre'},
+  {year:'2018', phase:'Phase de groupes', result:'Élimination', note:'Éliminé au fair-play (Japon)'},
+  {year:'2002', phase:'Quarts de finale', result:'Meilleur résultat', note:'Victoire mythique vs France en ouverture'},
+];
+
+// RENDER MATCHES
+function renderMatches() {
+  const grid = document.getElementById('matchesGrid');
+  grid.innerHTML = '';
+  matches.forEach(m => {
+    const div = document.createElement('div');
+    div.className = `match-card ${m.type}`;
+    div.onclick = () => openModal(m);
+    const badgeClass = {win:'badge-win',loss:'badge-loss',draw:'badge-draw',upcoming:'badge-upcoming'};
+    const badgeText = {win:'Victoire',loss:'Défaite',draw:'Nul',upcoming:'À venir'};
+    div.innerHTML = `
+      <div class="team-block">
+        <div class="flag-placeholder">${m.flag1}</div>
+        <div class="team-name">${m.team1}</div>
+      </div>
+      <div class="score-box">
+        <div class="score ${m.type==='upcoming'?'upcoming':''}">${m.score}</div>
+        <div class="score-comp">${m.comp}</div>
+        <div class="score-date">${m.date}</div>
+      </div>
+      <div class="team-block right">
+        <div class="team-name">${m.team2}</div>
+        <div class="flag-placeholder">${m.flag2}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="result-badge ${badgeClass[m.type]}">${badgeText[m.type]}</div>
+        <div class="match-arrow" style="margin-top:6px;">›</div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// MODAL
+function openModal(m) {
+  document.getElementById('modalComp').textContent = m.comp;
+  document.getElementById('modalTitle').textContent = `${m.team1} vs ${m.team2}`;
+  document.getElementById('mFlag1').textContent = m.flag1;
+  document.getElementById('mFlag2').textContent = m.flag2;
+  document.getElementById('mTeam1').textContent = m.team1;
+  document.getElementById('mTeam2').textContent = m.team2;
+  const sc = document.getElementById('mScore');
+  sc.textContent = m.score;
+  sc.className = m.type==='upcoming'?'modal-scoreboard upcoming':'modal-scoreboard';
+  document.getElementById('modalMeta').innerHTML = `
+    <div class="meta-item"><div class="meta-label">Date</div><div class="meta-value">${m.date}</div></div>
+    <div class="meta-item"><div class="meta-label">Stade/Lieu</div><div class="meta-value">${m.venue}</div></div>
+    <div class="meta-item"><div class="meta-label">Spectateurs</div><div class="meta-value">${m.attendance}</div></div>
+    <div class="meta-item"><div class="meta-label">Compétition</div><div class="meta-value">${m.comp}</div></div>
+  `;
+  const goalsDiv = document.getElementById('modalGoals');
+  if(m.goals.length > 0) {
+    goalsDiv.innerHTML = `<div class="goals-title">⚽ Buts</div>`+
+      m.goals.map(g=>`<div class="goal-item"><div class="goal-min">${g.min}'</div><div class="goal-team-flag">${g.team}</div><div class="goal-player">${g.player}</div></div>`).join('');
+  } else {
+    goalsDiv.innerHTML = '';
+  }
+  if(m.note) {
+    goalsDiv.innerHTML += `<div style="margin-top:16px;padding:12px;background:rgba(253,239,66,0.05);border-radius:6px;border-left:3px solid var(--yellow);font-size:13px;color:var(--muted);">${m.note}</div>`;
+  }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if(!e || e.target===document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// RENDER PLAYERS
+function renderPlayers(filter='all') {
+  const grid = document.getElementById('playersGrid');
+  grid.innerHTML = '';
+  const posClass = {GK:'pos-gk',DEF:'pos-def',MID:'pos-mid',ATT:'pos-att'};
+  const posLabel = {GK:'Gardien',DEF:'Défenseur',MID:'Milieu',ATT:'Attaquant'};
+  players.filter(p=>filter==='all'||p.pos===filter).forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'player-card';
+    div.innerHTML = `
+      <div class="player-num">${p.num}</div>
+      <div class="${posClass[p.pos]} player-pos">${posLabel[p.pos]}</div>
+      <div class="player-name">${p.name}${p.star?'<span class="star-badge">⭐</span>':''}</div>
+      <div class="player-club">🏟️ ${p.club} · ${p.age} ans</div>
+      <div class="player-stats-mini">
+        <div class="ps-item"><div class="ps-num">${p.caps}</div><div class="ps-lbl">Sélec.</div></div>
+        <div class="ps-item"><div class="ps-num">${p.goals}</div><div class="ps-lbl">Buts</div></div>
+        <div class="ps-item"><div class="ps-num">#${p.num}</div><div class="ps-lbl">Numéro</div></div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function filterPlayers(pos, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlayers(pos);
+}
+
+// RENDER STATS
+function renderStats() {
+  document.getElementById('statsCards').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">2</div><div class="stat-label">Titres CAN (2022, 2025)</div></div>
+    <div class="stat-card"><div class="stat-icon">⚽</div><div class="stat-value">36</div><div class="stat-label">Buts de Sadio Mané (record)</div></div>
+    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">#12</div><div class="stat-label">Classement FIFA (Janv. 2026)</div></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value">80%</div><div class="stat-label">Taux de victoire récent (10 matchs)</div></div>
+    <div class="stat-card"><div class="stat-icon">🛡️</div><div class="stat-value">0.8</div><div class="stat-label">Buts encaissés/match (CAN 2025)</div></div>
+    <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value">102</div><div class="stat-label">Sélections – Sadio Mané</div></div>
+  `;
+
+  // Bar chart CAN scorers
+  const scorers = [
+    {name:'Pape Gueye',goals:4},
+    {name:'Sadio Mané',goals:3},
+    {name:'Nicolas Jackson',goals:2},
+    {name:'Iliman Ndiaye',goals:2},
+    {name:'Ismaïla Sarr',goals:1},
+    {name:'Ibrahim Mbaye',goals:1},
+    {name:'Boulaye Dia',goals:1},
+  ];
+  const max = scorers[0].goals;
+  document.getElementById('barChartCAN').innerHTML = scorers.map(s=>`
+    <div class="bar-row">
+      <div class="bar-label">${s.name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${s.goals/max*100}%"></div></div>
+      <div class="bar-val">${s.goals}</div>
+    </div>
+  `).join('');
+
+  // Pie chart
+  const canvas = document.getElementById('pieCanvas');
+  const ctx = canvas.getContext('2d');
+  const wins = 8, draws = 1, losses = 1;
+  const total = wins+draws+losses;
+  const data = [
+    {val:wins, color:'#00853F', label:`Victoires: ${wins}`},
+    {val:draws, color:'#FDEF42', label:`Nuls: ${draws}`},
+    {val:losses, color:'#E31B23', label:`Défaites: ${losses}`}
+  ];
+  let start = -Math.PI/2;
+  data.forEach(d=>{
+    const slice = (d.val/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(90,90);
+    ctx.arc(90,90,80,start,start+slice);
+    ctx.closePath();
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    start += slice;
+  });
+  // center hole
+  ctx.beginPath();
+  ctx.arc(90,90,45,0,Math.PI*2);
+  ctx.fillStyle='#111';
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 18px Bebas Neue';
+  ctx.textAlign='center';
+  ctx.fillText('10',90,86);
+  ctx.font='11px Barlow';
+  ctx.fillStyle='#888';
+  ctx.fillText('matchs',90,104);
+  document.getElementById('pieLabels').innerHTML = data.map(d=>`
+    <div class="pie-label-item"><div class="pie-dot" style="background:${d.color}"></div>${d.label}</div>
+  `).join('');
+
+  // Key stats
+  document.getElementById('keyStats').innerHTML = [
+    {label:'Buts marqués (10 matchs)',val:16},
+    {label:'Buts encaissés (10 matchs)',val:4},
+    {label:'Clean sheets',val:5},
+    {label:'Moyenne buts/match',val:'1.6'},
+    {label:'Classement FIFA (pic)',val:'#12'},
+  ].map(s=>`
+    <div class="bar-row">
+      <div class="bar-label" style="font-size:14px">${s.label}</div>
+      <div class="bar-val" style="min-width:50px">${s.val}</div>
+    </div>
+  `).join('');
+
+  // History table
+  document.getElementById('historyTable').innerHTML = history.map(h=>`
+    <tr>
+      <td style="font-family:'Bebas Neue';font-size:20px;color:var(--yellow)">${h.year}</td>
+      <td>${h.phase}</td>
+      <td>${h.result}</td>
+      <td style="color:var(--muted);font-size:13px">${h.note}</td>
+    </tr>
+  `).join('');
+}
+
+// RENDER TROPHEES
+function renderTrophees() {
+  document.getElementById('tropheesGrid').innerHTML = trophees.map(t=>`
+    <div class="trophy-card">
+      <div class="trophy-icon">${t.icon}</div>
+      <div class="trophy-title">${t.title}</div>
+      <div class="trophy-year">${t.year}</div>
+      <div class="trophy-note">${t.note}</div>
+    </div>
+  `).join('');
+}
+
+// SECTION NAV
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top:document.querySelector('nav').offsetTop, behavior:'smooth'});
+}
+
+// INIT
+renderMatches();
+renderPlayers();
+renderStats();
+renderTrophees();
+</script>
+</body>
+</html>
